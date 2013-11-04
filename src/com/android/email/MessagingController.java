@@ -1088,10 +1088,10 @@ public class MessagingController implements Runnable {
                 boolean deleteFromTrash = false;
 
                 EmailContent.Message oldMessage =
-                    EmailContent.getContent(deletes, EmailContent.Message.class);
-                lastMessageId = oldMessage.mId;
+                        EmailContent.getContent(deletes, EmailContent.Message.class);
 
                 if (oldMessage != null) {
+                    lastMessageId = oldMessage.mId;
                     if (mailbox == null || mailbox.mId != oldMessage.mMailboxKey) {
                         mailbox = Mailbox.restoreMailboxWithId(mContext, oldMessage.mMailboxKey);
                         if (mailbox == null) {
