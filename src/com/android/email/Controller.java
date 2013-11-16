@@ -42,6 +42,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * New central controller/dispatcher for Email activities that may require remote operations.
@@ -69,6 +70,15 @@ public class Controller {
         EmailContent.MessageColumns.MAILBOX_KEY
     };
     private static int MESSAGEID_TO_MAILBOXID_COLUMN_MAILBOXID = 1;
+
+    private static final int ACCOUNT_TYPE_LEGACY = 0;
+    private static final int ACCOUNT_TYPE_SERVICE = 1;
+
+    /**
+     * Cache used by {@link #getServiceForAccount}.  Map from account-ids to ACCOUNT_TYPE_*.
+     */
+    private final ConcurrentHashMap<Long, Integer> mAccountToType
+            = new ConcurrentHashMap<Long, Integer>();
 
     protected Controller(Context _context) {
         mContext = _context.getApplicationContext();
@@ -804,19 +814,34 @@ public class Controller {
     /**
      * For a given account id, return a service proxy if applicable, or null.
      *
-     * TODO this should use a cache because we'll be doing this a lot
-     *
      * @param accountId the message of interest
      * @result service proxy, or null if n/a
      */
     private IEmailService getServiceForAccount(long accountId) {
-        // TODO make this more efficient, caching the account, MUCH smaller lookup here, etc.
+        // First, try cache.
+        final Integer type = mAccountToType.get(accountId);
+        if (type != null) {
+            // Cached
+            switch (type) {
+                case ACCOUNT_TYPE_LEGACY:
+                    return null;
+                case ACCOUNT_TYPE_SERVICE:
+                    return getExchangeEmailService();
+            }
+        }
+        // Not cached
         Account account = EmailContent.Account.restoreAccountWithId(mProviderContext, accountId);
         if (account == null || isMessagingController(account)) {
+            mAccountToType.put(accountId, ACCOUNT_TYPE_LEGACY);
             return null;
         } else {
-            return ExchangeUtils.getExchangeEmailService(mContext, mServiceCallback);
+            mAccountToType.put(accountId, ACCOUNT_TYPE_SERVICE);
+            return getExchangeEmailService();
         }
+    }
+
+    private IEmailService getExchangeEmailService() {
+        return ExchangeUtils.getExchangeEmailService(mContext, mServiceCallback);
     }
 
     /**
@@ -836,6 +861,15 @@ public class Controller {
         String scheme = info.mScheme;
 
         return ("pop3".equals(scheme) || "imap".equals(scheme));
+    }
+
+    /**
+     * This method should be called when an account is deleted.
+     *
+     * TODO: Make it really delete accounts and remove DeleteAccountTask.
+     */
+    public void deleteAccount(long accountId) {
+        mAccountToType.remove(accountId);
     }
 
     /**
