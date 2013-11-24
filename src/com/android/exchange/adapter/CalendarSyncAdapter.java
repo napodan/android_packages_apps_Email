@@ -1819,7 +1819,7 @@ public class CalendarSyncAdapter extends AbstractSyncAdapter {
                         cr.update(ContentUris.withAppendedId(EVENTS_URI, eventId), cidValues,
                                 null, null);
                     } else {
-                        if (entityValues.getAsInteger(Events.DELETED) == 1) {
+                        if (entityValues.getAsInteger(Calendar.EventsColumns.DELETED) == 1) {
                             userLog("Deleting event with serverId: ", serverId);
                             s.start(Tags.SYNC_DELETE).data(Tags.SYNC_SERVER_ID, serverId).end();
                             mDeletedIdList.add(eventId);
@@ -1885,7 +1885,7 @@ public class CalendarSyncAdapter extends AbstractSyncAdapter {
                                     exEntity.addSubValue(ncv.uri, ncv.values);
                                 }
 
-                                if ((getInt(exValues, Events.DELETED) == 1) ||
+                                if ((getInt(exValues, Calendar.EventsColumns.DELETED) == 1) ||
                                         (getInt(exValues, Events.STATUS) ==
                                             Events.STATUS_CANCELED)) {
                                     flag = Message.FLAG_OUTGOING_MEETING_CANCEL;
