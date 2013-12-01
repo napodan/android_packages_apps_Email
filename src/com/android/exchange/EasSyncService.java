@@ -379,7 +379,7 @@ public class EasSyncService extends AbstractSyncService {
             throw new MessagingException(MessagingException.PROTOCOL_VERSION_UNSUPPORTED);
         } else {
             service.mProtocolVersion = ourVersion;
-            service.mProtocolVersionDouble = Double.parseDouble(ourVersion);
+            service.mProtocolVersionDouble = Eas.getProtocolVersionDouble(ourVersion);
             if (service.mAccount != null) {
                 service.mAccount.mProtocolVersion = ourVersion;
             }
@@ -793,7 +793,7 @@ public class EasSyncService extends AbstractSyncService {
      * @param context caller's context
      * @param accountId the account Id to search
      * @param filter the characters entered so far
-     * @return a result record
+     * @return a result record or null
      *
      * TODO: shorter timeout for interactive lookup
      * TODO: make watchdog actually work (it doesn't understand our service w/Mailbox == 0)
@@ -805,6 +805,15 @@ public class EasSyncService extends AbstractSyncService {
             HostAuth ha = HostAuth.restoreHostAuthWithId(context, acct.mHostAuthKeyRecv);
             EasSyncService svc = new EasSyncService("%GalLookupk%");
             try {
+                // If there's no protocol version set up, we haven't successfully started syncing
+                // so we can't use GAL yet
+                String protocolVersion = acct.mProtocolVersion;
+                if (protocolVersion == null) {
+                    return null;
+                } else {
+                    svc.mProtocolVersion = protocolVersion;
+                    svc.mProtocolVersionDouble = Eas.getProtocolVersionDouble(protocolVersion);
+                }
                 svc.mContext = context;
                 svc.mHostAddress = ha.mAddress;
                 svc.mUserName = ha.mLogin;
@@ -2197,7 +2206,7 @@ public class EasSyncService extends AbstractSyncService {
         if (mProtocolVersion == null) {
             mProtocolVersion = Eas.DEFAULT_PROTOCOL_VERSION;
         }
-        mProtocolVersionDouble = Double.parseDouble(mProtocolVersion);
+        mProtocolVersionDouble = Eas.getProtocolVersionDouble(mProtocolVersion);
         return true;
     }
 

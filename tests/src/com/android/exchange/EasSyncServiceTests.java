@@ -162,4 +162,13 @@ import java.io.IOException;
         assertEquals(1, headers.length);
         assertEquals("key", headers[0].getValue());
     }
+
+    public void testGetProtocolVersionDouble() {
+        assertEquals(Eas.SUPPORTED_PROTOCOL_EX2003_DOUBLE,
+                Eas.getProtocolVersionDouble(Eas.SUPPORTED_PROTOCOL_EX2003));
+        assertEquals(Eas.SUPPORTED_PROTOCOL_EX2007_DOUBLE,
+                Eas.getProtocolVersionDouble(Eas.SUPPORTED_PROTOCOL_EX2007));
+        assertEquals(Eas.SUPPORTED_PROTOCOL_EX2007_SP1_DOUBLE,
+                Eas.getProtocolVersionDouble(Eas.SUPPORTED_PROTOCOL_EX2007_SP1));
+    }
 }
