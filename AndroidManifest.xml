@@ -146,7 +146,8 @@
         </activity>
         <activity
             android:name=".activity.AccountFolderList"
-            android:launchMode="singleTop" >
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.WithActionBar" >
         </activity>
         
         <activity 
