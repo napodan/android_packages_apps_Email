@@ -48,18 +48,18 @@ import java.util.List;
 
 /*
  * A simple ContentProvider that allows file access to Email's attachments.
- * 
+ *
  * The URI scheme is as follows.  For raw file access:
  *   content://com.android.email.attachmentprovider/acct#/attach#/RAW
- * 
+ *
  * And for access to thumbnails:
  *   content://com.android.email.attachmentprovider/acct#/attach#/THUMBNAIL/width#/height#
  *
  * The on-disk (storage) schema is as follows.
- * 
+ *
  * Attachments are stored at:  <database-path>/account#.db_att/item#
  * Thumbnails are stored at:   <cache-path>/thmb_account#_item#
- * 
+ *
  * Using the standard application context, account #10 and attachment # 20, this would be:
  *      /data/data/com.android.email/databases/10.db_att/20
  *      /data/data/com.android.email/cache/thmb_10_20
@@ -184,6 +184,8 @@ public class AttachmentProvider extends ContentProvider {
      * Helper to convert unknown or unmapped attachments to something useful based on filename
      * extensions.  Imperfect, but helps.
      *
+     * If the file extension is ".eml", return "message/rfc822", which is necessary for the email
+     * app to open it.
      * If the given mime type is non-empty and anything other than "application/octet-stream",
      * just return it.  (This is the most common case.)
      * If the filename has a recognizable extension and it converts to a mime type, return that.
@@ -195,6 +197,9 @@ public class AttachmentProvider extends ContentProvider {
      * @return A likely mime type for the attachment
      */
     public static String inferMimeType(String fileName, String mimeType) {
+        if (fileName != null && fileName.toLowerCase().endsWith(".eml")) {
+            return "message/rfc822";
+        }
         // If the given mime type appears to be non-empty and non-generic - return it
         if (!TextUtils.isEmpty(mimeType) &&
                 !"application/octet-stream".equalsIgnoreCase(mimeType)) {
@@ -225,12 +230,12 @@ public class AttachmentProvider extends ContentProvider {
     /**
      * Open an attachment file.  There are two "modes" - "raw", which returns an actual file,
      * and "thumbnail", which attempts to generate a thumbnail image.
-     * 
+     *
      * Thumbnails are cached for easy space recovery and cleanup.
-     * 
+     *
      * TODO:  The thumbnail mode returns null for its failure cases, instead of throwing
      * FileNotFoundException, and should be fixed for consistency.
-     * 
+     *
      *  @throws FileNotFoundException
      */
     @Override
@@ -309,7 +314,7 @@ public class AttachmentProvider extends ContentProvider {
     /**
      * Returns a cursor based on the data in the attachments table, or null if the attachment
      * is not recorded in the table.
-     * 
+     *
      * Supports REST Uri only, for a single row - selection, selection args, and sortOrder are
      * ignored (non-null values should probably throw an exception....)
      */
@@ -401,7 +406,7 @@ public class AttachmentProvider extends ContentProvider {
     /**
      * Resolve attachment id to content URI.  Returns the resolved content URI (from the attachment
      * DB) or, if not found, simply returns the incoming value.
-     * 
+     *
      * @param attachmentUri
      * @return resolved content URI
      *

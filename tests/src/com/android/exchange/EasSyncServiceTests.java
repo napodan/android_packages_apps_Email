@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 
 import android.content.Context;
 import android.test.AndroidTestCase;
+import android.util.Base64;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +34,14 @@ import java.io.IOException;
  * You can run this entire test case with:
  * runtest -c com.android.exchange.EasSyncServiceTests email
  */
- public class EasSyncServiceTests extends AndroidTestCase {
+
+public class EasSyncServiceTests extends AndroidTestCase {
+    static private final String USER = "user";
+    static private final String PASSWORD = "password";
+    static private final String HOST = "xxx.host.zzz";
+    static private final String ID = "id";
+    static private final String TYPE = "type";
+
     Context mMockContext;
 
     @Override
@@ -170,5 +178,40 @@ import java.io.IOException;
                 Eas.getProtocolVersionDouble(Eas.SUPPORTED_PROTOCOL_EX2007));
         assertEquals(Eas.SUPPORTED_PROTOCOL_EX2007_SP1_DOUBLE,
                 Eas.getProtocolVersionDouble(Eas.SUPPORTED_PROTOCOL_EX2007_SP1));
+    }
+
+    private EasSyncService setupService(String user) {
+        EasSyncService svc = new EasSyncService();
+        svc.mUserName = user;
+        svc.mPassword = PASSWORD;
+        svc.mDeviceId = ID;
+        svc.mDeviceType = TYPE;
+        svc.mHostAddress = HOST;
+        return svc;
+    }
+
+    public void testMakeUriString() throws IOException {
+        // Simple user name and command
+        EasSyncService svc = setupService(USER);
+        String uriString = svc.makeUriString("OPTIONS", null);
+        // These next two should now be cached
+        assertNotNull(svc.mAuthString);
+        assertNotNull(svc.mCmdString);
+        assertEquals("Basic " + Base64.encodeToString((USER+":"+PASSWORD).getBytes(),
+                Base64.NO_WRAP), svc.mAuthString);
+        assertEquals("&User=" + USER + "&DeviceId=" + ID + "&DeviceType=" + TYPE, svc.mCmdString);
+        assertEquals("https://" + HOST + "/Microsoft-Server-ActiveSync?Cmd=OPTIONS" +
+                svc.mCmdString, uriString);
+        // User name that requires encoding
+        String user = "name_with_underscore@foo%bar.com";
+        svc = setupService(user);
+        uriString = svc.makeUriString("OPTIONS", null);
+        assertEquals("Basic " + Base64.encodeToString((user+":"+PASSWORD).getBytes(),
+                Base64.NO_WRAP), svc.mAuthString);
+        String safeUserName = "name_with_underscore%40foo%25bar.com";
+        assertEquals("&User=" + safeUserName + "&DeviceId=" + ID + "&DeviceType=" + TYPE,
+                svc.mCmdString);
+        assertEquals("https://" + HOST + "/Microsoft-Server-ActiveSync?Cmd=OPTIONS" +
+                svc.mCmdString, uriString);
     }
 }
