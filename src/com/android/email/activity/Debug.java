@@ -73,7 +73,6 @@ public class Debug extends Activity implements OnCheckedChangeListener {
 
         // Note:  To prevent recursion while presetting checkboxes, assign all listeners last
         mEnableDebugLoggingView.setOnCheckedChangeListener(this);
-        mEnableSensitiveLoggingView.setOnCheckedChangeListener(this);
         //EXCHANGE-REMOVE-SECTION-START
         mEnableExchangeLoggingView.setOnCheckedChangeListener(this);
         mEnableExchangeFileLoggingView.setOnCheckedChangeListener(this);
