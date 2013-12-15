@@ -947,6 +947,7 @@ public class CalendarUtilities {
         toCalendar.set(fromCalendar.get(GregorianCalendar.YEAR),
                 fromCalendar.get(GregorianCalendar.MONTH),
                 fromCalendar.get(GregorianCalendar.DATE), 0, 0, 0);
+        toCalendar.set(GregorianCalendar.MILLISECOND, 0);
         return toCalendar.getTimeInMillis();
     }
 
